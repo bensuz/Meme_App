@@ -4,14 +4,19 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 
+import TextItem from "./TextItem";
+
 const Memes = () => {
     const [currentDataIndex, setCurrentDataIndex] = useState(0);
     const [data, setData] = useState([]);
     const [memes, setMemes] = useState({});
     const [userText, setUserText] = useState("");
-    const [textPosition, setTextPosition] = useState("top-0");
-    const [fontSize, setFontSize] = useState("xl");
-    const [color, setColor] = useState("slate-600");
+    // const elementRef = useRef(0);
+
+    const [fontSize, setFontSize] = useState({ value: "xl", label: "Small" });
+    const [color, setColor] = useState({ value: "slate-900", label: "Black" });
+    const [savedUserTexts, setSavedUserTexts] = useState([]);
+    // const imgContainerRef = useRef(null);
 
     const fetchData = async () => {
         setTimeout(async () => {
@@ -29,7 +34,15 @@ const Memes = () => {
     useEffect(() => {
         fetchData();
     }, []);
-    console.log(data);
+    // console.log(data);
+
+    // useEffect(() => {
+    //     const element = elementRef.current;
+    //     const rect = element.getBoundingClientRect();
+    //     const { top, left } = rect;
+
+    //     console.log("Initial offset - top:", top, "left:", left);
+    // }, []);
 
     if (data.length === 0) {
         return (
@@ -44,6 +57,9 @@ const Memes = () => {
             </div>
         );
     }
+    const moveText = () => {
+        console.log("movingItem");
+    };
 
     const handleNextMeme = () => {
         if (currentDataIndex < data.length - 1) {
@@ -62,7 +78,7 @@ const Memes = () => {
                     meme: data[currentDataIndex - 1].name,
                     img: data[currentDataIndex - 1].url,
                     userText: { userText },
-                    textPosition: { textPosition },
+                    // textPosition: { textPosition },
                     fontSize: { fontSize },
                     color: { color },
                 },
@@ -70,24 +86,26 @@ const Memes = () => {
         }
     };
 
-    const handleSubmit = () => {
-        setMemes({
-            ...memes,
-            [currentDataIndex]: {
-                meme: data[currentDataIndex].name,
-                img: data[currentDataIndex].url,
-                userText: userText,
-                textPosition: textPosition,
-                fontSize: fontSize,
-                color: color,
-            },
-        });
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setSavedUserTexts([...savedUserTexts, userText]);
+        setUserText("");
+        // setMemes({
+        //     ...memes,
+        //     [currentDataIndex]: {
+        //         meme: data[currentDataIndex].name,
+        //         img: data[currentDataIndex].url,
+        //         userText: userText,
+        //         // textPosition: textPosition,
+        //         fontSize: fontSize,
+        //         color: color,
+        //     },
+        // });
     };
-    const positionOptions = [
-        { value: "top", label: "Top" },
-        { value: "bottom", label: "Bottom" },
-        { value: "center", label: "Center" },
-    ];
+
+    // const handleOnDrag = (e: React.DragEvent, widgetType: string) => {
+    //     e.dataTransfer.setData("widgetType", widgetType);
+    // };
 
     const fontOptions = [
         { value: "xl", label: "Small" },
@@ -100,13 +118,12 @@ const Memes = () => {
         { value: "red-600", label: "Red" },
         { value: "blue-600", label: "Blue" },
     ];
-    // const randomIndex = Math.floor(Math.random() * data.length);
 
     return (
         <>
             <form
                 className="flex items-center justify-center mb-5 space-x-5"
-                action="submit"
+                action=""
             >
                 <input
                     className="border-2 rounded-lg pl-2 p-0.5"
@@ -116,28 +133,26 @@ const Memes = () => {
                     placeholder="Enter text"
                 />
                 <div className="flex space-x-5">
-                    <Select
-                        placeholder="Position"
-                        options={positionOptions}
-                        value={textPosition}
-                        onChange={(e) => setTextPosition(e.value)}
-                    ></Select>
-                    <Select
-                        placeholder="Font-Size"
-                        options={fontOptions}
-                        value={fontSize}
-                        onChange={(selectedOption) =>
-                            setFontSize(selectedOption.value)
-                        }
-                    ></Select>
-                    <Select
-                        placeholder="Color"
-                        options={colorOptions}
-                        value={color}
-                        onChange={(selectedOption) =>
-                            setColor(selectedOption.value)
-                        }
-                    ></Select>
+                    {
+                        <>
+                            <Select
+                                placeholder="Font-Size"
+                                options={fontOptions}
+                                value={fontSize}
+                                onChange={(selectedOption) =>
+                                    setFontSize(selectedOption)
+                                }
+                            ></Select>
+                            <Select
+                                placeholder="Color"
+                                options={colorOptions}
+                                value={color}
+                                onChange={(selectedOption) =>
+                                    setColor(selectedOption)
+                                }
+                            ></Select>
+                        </>
+                    }
                 </div>
                 <button
                     className="bg-slate-300 p-2 rounded-xl space-x-10 hover:bg-slate-600 hover:text-white"
@@ -146,25 +161,54 @@ const Memes = () => {
                     Save Meme
                 </button>
             </form>
+            <div className="flex flex-col justify-center items-center">
+                <div className="flex justify-center items-center gap-20 ">
+                    <div
+                        className="flex justify-center items-center relative gap-10 ImgContainer"
+                        // onDragOver={(e) => {
+                        //     e.preventDefault();
+                        // }}
+                        // onDrop={(e) => handleDrop(e)}
+                        // ref={imgContainerRef}
+                    >
+                        <div draggable>
+                            {savedUserTexts.map((savedUserText, index) => (
+                                <TextItem
+                                    key={index}
+                                    id={index}
+                                    text={savedUserText}
+                                    index={index}
+                                    moveText={moveText}
+                                    draggable="true"
+                                />
+                            ))}
 
-            <div className="flex flex-col justify-center items-center  relative">
-                <img
-                    className="border-2  max-w-xl "
-                    src={data[currentDataIndex].url}
-                />
-                <div
-                    className={`absolute left-0 w-full text-center ${
-                        textPosition === "top"
-                            ? "top-10"
-                            : textPosition === "bottom"
-                            ? "bottom-32"
-                            : "top-1/2 transform -translate-y-1/2"
-                    } text-${fontSize} text-${color} text-shadow-md`}
-                >
-                    {" "}
-                    {userText}
+                            {/* {Object.keys(memes).map((index) => (
+                                <TextItem
+                                    key={index}
+                                    id={index}
+                                    text={memes[index].userText}
+                                    fontSize={memes[index].fontSize}
+                                    color={memes[index].color}
+                                    onDragStart={(e) => {
+                                        e.dataTransfer.setData(
+                                            "textItemId",
+                                            index
+                                        );
+                            ))} */}
+
+                            <img
+                                className="border-2  max-w-xl "
+                                src={data[currentDataIndex].url}
+                            />
+                            {/* <div
+                            className={`absolute text-${fontSize.value} font-bold text-${color.value}`}
+                        >
+                            {userText}
+                        </div> */}
+                        </div>
+                    </div>
                 </div>
-
                 <div className="flex space-x-8 mt-5">
                     <button
                         onClick={handlePrevMeme}
